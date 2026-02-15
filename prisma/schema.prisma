@@ -1,0 +1,213 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ============================================
+// AUTH & USERS
+// ============================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String?  @unique
+  regNumber String?  @unique @map("reg_number")
+  password  String
+  name      String?
+  role      String   @default("STUDENT") // "STUDENT" | "ADMIN"
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  student Student?
+
+  @@map("users")
+}
+
+// ============================================
+// STUDENT APPLICATION DATA
+// ============================================
+
+model Student {
+  id     String @id @default(cuid())
+  userId String @unique @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // ---- Basic Information ----
+  registrationNumber String  @unique @map("registration_number")
+  rollNumber         String? @map("roll_number")
+  groupShift         String? @map("group_shift")
+  name               String
+  fatherName         String  @map("father_name")
+  yearSemester       String  @default("FIRST_YEAR") @map("year_semester") // "FIRST_YEAR" | "SECOND_YEAR"
+  instituteName      String? @map("institute_name")
+  branchName         String? @map("branch_name")
+  email              String?
+  nationality        String? @default("INDIAN")
+  dateOfBirth        String? @map("date_of_birth")
+  gender             String? // "MALE" | "FEMALE" | "OTHER"
+  category           String? // "GENERAL" | "OBC" | "SC" | "ST" | "EWS" | "OTHER"
+  subCategory        String? @map("sub_category")
+  mobileNumber       String? @map("mobile_number")
+  landlineNumber     String? @map("landline_number")
+  feeSubmitted       String? @map("fee_submitted")
+  aadharNumber       String? @map("aadhar_number")
+
+  // ---- Education Background ----
+  highSchoolPass       Boolean? @map("high_school_pass")
+  intermediatePass     Boolean? @map("intermediate_pass")
+  highSchoolAreaType   String?  @map("high_school_area_type") // "RURAL" | "URBAN"
+  itiPass              Boolean? @map("iti_pass")
+  minority             Boolean? @map("minority")
+  interQualifiedPCBPCM Boolean? @map("inter_qualified_pcb_pcm")
+
+  // ---- Admission Type ----
+  admissionType  String? @map("admission_type") // "JEEP" | "NON_JEEP"
+  jeepRollNumber String? @map("jeep_roll_number")
+  jeepRank       String? @map("jeep_rank")
+
+  // ---- Student Type ----
+  studentType          String? @default("REGULAR") @map("student_type") // "REGULAR" | "PRIVATE" | "TRANSFERRED" | "STUDY_PERMISSION"
+  transferFromCollege  String? @map("transfer_from_college")
+  transferToCollege    String? @map("transfer_to_college")
+  studyPermFromCollege String? @map("study_perm_from_college")
+  studyPermToCollege   String? @map("study_perm_to_college")
+
+  // ---- Status ----
+  isSubmitted         Boolean   @default(false) @map("is_submitted")
+  submittedAt         DateTime? @map("submitted_at")
+  declarationAccepted Boolean   @default(false) @map("declaration_accepted")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // ---- Relations ----
+  addresses      Address[]
+  qualifications Qualification[]
+  sessionalMarks SessionalMark[]
+  boardMarks     BoardMark[]
+  fixedMarks     FixedMark[]
+
+  @@map("students")
+}
+
+// ============================================
+// ADDRESSES
+// ============================================
+
+model Address {
+  id        String @id @default(cuid())
+  studentId String @map("student_id")
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  type      String // "CORRESPONDENCE" | "PERMANENT"
+  address   String?
+  state     String?
+  district  String?
+  pinCode   String? @map("pin_code")
+  tehsil    String?
+  block     String?
+
+  @@unique([studentId, type])
+  @@map("addresses")
+}
+
+// ============================================
+// QUALIFICATION DETAILS
+// ============================================
+
+model Qualification {
+  id              String @id @default(cuid())
+  studentId       String @map("student_id")
+  student         Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  level           String // "HIGH_SCHOOL" | "INTERMEDIATE" | "UNDER_GRADUATE" | "POST_GRADUATE" | "OTHERS"
+  courseName      String? @map("course_name")
+  boardUniversity String? @map("board_university")
+  passingYear     Int?    @map("passing_year")
+  marksObtained   Float?  @map("marks_obtained")
+  maxMarks        Float?  @map("max_marks")
+  percentageGrade String? @map("percentage_grade")
+
+  @@unique([studentId, level])
+  @@map("qualifications")
+}
+
+// ============================================
+// SUBJECTS (Reference Data)
+// ============================================
+
+model Subject {
+  id           String  @id @default(cuid())
+  paperCode    String  @map("paper_code")
+  name         String
+  shortName    String? @map("short_name")
+  year         String  // "FIRST_YEAR" | "SECOND_YEAR"
+  hasTheory    Boolean @default(true) @map("has_theory")
+  hasPractical Boolean @default(true) @map("has_practical")
+  isFixedMarks Boolean @default(false) @map("is_fixed_marks")
+
+  sessionalMarks SessionalMark[]
+  boardMarks     BoardMark[]
+  fixedMarks     FixedMark[]
+
+  @@unique([paperCode, year])
+  @@map("subjects")
+}
+
+// ============================================
+// SESSIONAL MARKS (Admin enters)
+// ============================================
+
+model SessionalMark {
+  id        String @id @default(cuid())
+  studentId String @map("student_id")
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subjectId String @map("subject_id")
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  type      String // "THEORY" | "PRACTICAL"
+
+  sessional1 Float? @map("sessional_1")
+  sessional2 Float? @map("sessional_2")
+  sessional3 Float? @map("sessional_3")
+
+  // Practical-specific additional marks
+  assignmentMarks Float? @map("assignment_marks") // Out of 5
+  fieldVisitMarks Float? @map("field_visit_marks") // Out of 5
+
+  @@unique([studentId, subjectId, type])
+  @@map("sessional_marks")
+}
+
+// ============================================
+// BOARD / UNIVERSITY EXAM MARKS (Admin enters)
+// ============================================
+
+model BoardMark {
+  id             String @id @default(cuid())
+  studentId      String @map("student_id")
+  student        Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subjectId      String @map("subject_id")
+  subject        Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  theoryMarks    Float? @map("theory_marks")    // Out of 80
+  practicalMarks Float? @map("practical_marks") // Out of 80
+
+  @@unique([studentId, subjectId])
+  @@map("board_marks")
+}
+
+// ============================================
+// FIXED MARKS (Games, Discipline - Admin enters)
+// ============================================
+
+model FixedMark {
+  id        String @id @default(cuid())
+  studentId String @map("student_id")
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subjectId String @map("subject_id")
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  marks     Float? // Admin assigns directly
+
+  @@unique([studentId, subjectId])
+  @@map("fixed_marks")
+}
