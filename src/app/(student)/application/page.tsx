@@ -32,6 +32,7 @@ import {
   QUALIFICATION_LEVELS,
   STATES,
   YES_NO_OPTIONS,
+  BRANCHES,
 } from "@/lib/constants";
 
 const TOTAL_STEPS = 6;
@@ -43,6 +44,7 @@ export default function ApplicationPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [declaration, setDeclaration] = useState(false);
+  const [sameAsCorrespondence, setSameAsCorrespondence] = useState(false);
 
   const { register, handleSubmit, watch, setValue, getValues } = useForm();
 
@@ -243,6 +245,20 @@ export default function ApplicationPage() {
                   <Input {...register("nationality")} defaultValue="Indian" required />
                 </div>
                 <div className="space-y-2">
+                  <Label>Year of Admission (1st Year)</Label>
+                  <Input
+                    {...register("yearOfAdmissionFirstYear")}
+                    placeholder="e.g., 2024"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Year of Admission (2nd Year)</Label>
+                  <Input
+                    {...register("yearOfAdmissionSecondYear")}
+                    placeholder="e.g., 2025"
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label>Student Type</Label>
                   <Select
                     value={watch("studentType") || ""}
@@ -285,7 +301,21 @@ export default function ApplicationPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Branch/Course</Label>
-                  <Input {...register("branch")} required />
+                  <Select
+                    value={watch("branch") || ""}
+                    onValueChange={(value) => setValue("branch", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select branch/course" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BRANCHES.map((branch) => (
+                        <SelectItem key={branch.value} value={branch.value}>
+                          {branch.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Previous School/College</Label>
@@ -302,10 +332,6 @@ export default function ApplicationPage() {
                 <div className="space-y-2">
                   <Label>Percentage/CGPA</Label>
                   <Input {...register("percentage")} required />
-                </div>
-                <div className="space-y-2">
-                  <Label>Roll Number (Optional)</Label>
-                  <Input {...register("rollNumber")} />
                 </div>
               </div>
             )}
@@ -330,113 +356,42 @@ export default function ApplicationPage() {
                     </SelectContent>
                   </Select>
                 </div>
+                {watch("admissionType") === "JEEP" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>JEEP Roll No.</Label>
+                      <Input {...register("jeepRollNumber")} required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>JEEP Rank</Label>
+                      <Input {...register("jeepRank")} required />
+                    </div>
+                  </>
+                )}
+                {watch("admissionType") === "NON_JEEP" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>12th Board</Label>
+                      <Input {...register("twelfthBoard")} required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>12th Percentage</Label>
+                      <Input {...register("twelfthPercentage")} required />
+                    </div>
+                  </>
+                )}
                 <div className="space-y-2">
-                  <Label>Admission Date</Label>
+                  <Label>
+                    Date of admission in{" "}
+                    {BRANCHES.find((b) => b.value === watch("branch"))?.label || "Branch/Course"}
+                  </Label>
                   <Input type="date" {...register("admissionDate")} required />
-                </div>
-                <div className="space-y-2">
-                  <Label>Session</Label>
-                  <Input
-                    {...register("session")}
-                    placeholder="e.g., 2024-25"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Hostel Required</Label>
-                  <Select
-                    value={watch("hostelRequired") || ""}
-                    onValueChange={(value) => setValue("hostelRequired", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {YES_NO_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Transport Required</Label>
-                  <Select
-                    value={watch("transportRequired") || ""}
-                    onValueChange={(value) =>
-                      setValue("transportRequired", value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {YES_NO_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
             )}
 
             {currentStep === 4 && (
               <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">
-                    Permanent Address
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2 col-span-2">
-                      <Label>Address</Label>
-                      <Textarea {...register("permanentAddress")} required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Village/City</Label>
-                      <Input {...register("permanentVillage")} required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Post Office</Label>
-                      <Input {...register("permanentPostOffice")} required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Police Station</Label>
-                      <Input {...register("permanentPoliceStation")} required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>District</Label>
-                      <Input {...register("permanentDistrict")} required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>State</Label>
-                      <Select
-                        value={watch("permanentState") || ""}
-                        onValueChange={(value) =>
-                          setValue("permanentState", value)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select state" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {STATES.map((state) => (
-                            <SelectItem key={state} value={state}>
-                              {state}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>PIN Code</Label>
-                      <Input {...register("permanentPinCode")} required />
-                    </div>
-                  </div>
-                </div>
-
                 <div>
                   <h3 className="text-lg font-semibold mb-4">
                     Correspondence Address
@@ -454,18 +409,12 @@ export default function ApplicationPage() {
                       <Input {...register("correspondenceVillage")} required />
                     </div>
                     <div className="space-y-2">
-                      <Label>Post Office</Label>
-                      <Input
-                        {...register("correspondencePostOffice")}
-                        required
-                      />
+                      <Label>Block</Label>
+                      <Input {...register("correspondenceBlock")} required />
                     </div>
                     <div className="space-y-2">
-                      <Label>Police Station</Label>
-                      <Input
-                        {...register("correspondencePoliceStation")}
-                        required
-                      />
+                      <Label>Tehsil</Label>
+                      <Input {...register("correspondenceTehsil")} required />
                     </div>
                     <div className="space-y-2">
                       <Label>District</Label>
@@ -496,6 +445,86 @@ export default function ApplicationPage() {
                       <Input {...register("correspondencePinCode")} required />
                     </div>
                   </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">
+                      Permanent Address
+                    </h3>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="sameAsCorrespondence"
+                        checked={sameAsCorrespondence}
+                        onCheckedChange={(checked) => {
+                          setSameAsCorrespondence(checked as boolean);
+                          if (checked) {
+                            setValue("permanentAddress", getValues("correspondenceAddress"));
+                            setValue("permanentVillage", getValues("correspondenceVillage"));
+                            setValue("permanentBlock", getValues("correspondenceBlock"));
+                            setValue("permanentTehsil", getValues("correspondenceTehsil"));
+                            setValue("permanentDistrict", getValues("correspondenceDistrict"));
+                            setValue("permanentState", getValues("correspondenceState"));
+                            setValue("permanentPinCode", getValues("correspondencePinCode"));
+                          }
+                        }}
+                      />
+                      <label
+                        htmlFor="sameAsCorrespondence"
+                        className="text-sm font-medium leading-none"
+                      >
+                        Same as Correspondence Address
+                      </label>
+                    </div>
+                  </div>
+                  {!sameAsCorrespondence && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2 col-span-2">
+                      <Label>Address</Label>
+                      <Textarea {...register("permanentAddress")} required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Village/City</Label>
+                      <Input {...register("permanentVillage")} required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Block</Label>
+                      <Input {...register("permanentBlock")} required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Tehsil</Label>
+                      <Input {...register("permanentTehsil")} required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>District</Label>
+                      <Input {...register("permanentDistrict")} required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>State</Label>
+                      <Select
+                        value={watch("permanentState") || ""}
+                        onValueChange={(value) =>
+                          setValue("permanentState", value)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select state" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {STATES.map((state) => (
+                            <SelectItem key={state} value={state}>
+                              {state}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>PIN Code</Label>
+                      <Input {...register("permanentPinCode")} required />
+                    </div>
+                  </div>
+                  )}
                 </div>
               </div>
             )}

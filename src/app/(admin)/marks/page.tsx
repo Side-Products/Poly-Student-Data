@@ -146,22 +146,22 @@ export default function BulkMarksPage() {
             (m) => m.subjectId === selectedSubjectId && m.type === "THEORY"
           );
           if (theorySessional) {
-            row.theoryS1 = theorySessional.sessional1?.toString() ?? "";
-            row.theoryS2 = theorySessional.sessional2?.toString() ?? "";
-            row.theoryS3 = theorySessional.sessional3?.toString() ?? "";
+            row.theoryS1 = theorySessional.sessional1 ?? "";
+            row.theoryS2 = theorySessional.sessional2 ?? "";
+            row.theoryS3 = theorySessional.sessional3 ?? "";
           }
 
           const practicalSessional = existingMarks.sessionalMarks.find(
             (m) => m.subjectId === selectedSubjectId && m.type === "PRACTICAL"
           );
           if (practicalSessional) {
-            row.practicalS1 = practicalSessional.sessional1?.toString() ?? "";
-            row.practicalS2 = practicalSessional.sessional2?.toString() ?? "";
-            row.practicalS3 = practicalSessional.sessional3?.toString() ?? "";
+            row.practicalS1 = practicalSessional.sessional1 ?? "";
+            row.practicalS2 = practicalSessional.sessional2 ?? "";
+            row.practicalS3 = practicalSessional.sessional3 ?? "";
             row.practicalAssignment =
-              practicalSessional.assignmentMarks?.toString() ?? "";
+              practicalSessional.assignmentMarks ?? "";
             row.practicalFieldVisit =
-              practicalSessional.fieldVisitMarks?.toString() ?? "";
+              practicalSessional.fieldVisitMarks ?? "";
           }
 
           // Find existing board marks
@@ -169,8 +169,8 @@ export default function BulkMarksPage() {
             (b) => b.subjectId === selectedSubjectId
           );
           if (board) {
-            row.theoryBoard = board.theoryMarks?.toString() ?? "";
-            row.practicalBoard = board.practicalMarks?.toString() ?? "";
+            row.theoryBoard = board.theoryMarks ?? "";
+            row.practicalBoard = board.practicalMarks ?? "";
           }
 
           // Find existing fixed marks
@@ -178,7 +178,7 @@ export default function BulkMarksPage() {
             (f) => f.subjectId === selectedSubjectId
           );
           if (fixed) {
-            row.fixedMarks = fixed.marks?.toString() ?? "";
+            row.fixedMarks = fixed.marks ?? "";
           }
 
           newMarksMap[student.id] = row;
@@ -196,6 +196,12 @@ export default function BulkMarksPage() {
   useEffect(() => {
     loadStudentsAndMarks();
   }, [loadStudentsAndMarks]);
+
+  // Convert empty string to null for storage, keep everything else as-is
+  const toStorageValue = (val: string): string | null => {
+    if (!val || val.trim() === "") return null;
+    return val.trim();
+  };
 
   const updateMark = (
     studentId: string,
@@ -229,7 +235,7 @@ export default function BulkMarksPage() {
             upsertFixedMarks({
               studentId: student.id,
               subjectId: selectedSubject.id,
-              marks: row.fixedMarks ? parseFloat(row.fixedMarks) : null,
+              marks: toStorageValue(row.fixedMarks),
             })
           );
         } else {
@@ -239,9 +245,9 @@ export default function BulkMarksPage() {
                 studentId: student.id,
                 subjectId: selectedSubject.id,
                 type: "THEORY",
-                sessional1: row.theoryS1 ? parseFloat(row.theoryS1) : null,
-                sessional2: row.theoryS2 ? parseFloat(row.theoryS2) : null,
-                sessional3: row.theoryS3 ? parseFloat(row.theoryS3) : null,
+                sessional1: toStorageValue(row.theoryS1),
+                sessional2: toStorageValue(row.theoryS2),
+                sessional3: toStorageValue(row.theoryS3),
               })
             );
           }
@@ -252,21 +258,11 @@ export default function BulkMarksPage() {
                 studentId: student.id,
                 subjectId: selectedSubject.id,
                 type: "PRACTICAL",
-                sessional1: row.practicalS1
-                  ? parseFloat(row.practicalS1)
-                  : null,
-                sessional2: row.practicalS2
-                  ? parseFloat(row.practicalS2)
-                  : null,
-                sessional3: row.practicalS3
-                  ? parseFloat(row.practicalS3)
-                  : null,
-                assignmentMarks: row.practicalAssignment
-                  ? parseFloat(row.practicalAssignment)
-                  : null,
-                fieldVisitMarks: row.practicalFieldVisit
-                  ? parseFloat(row.practicalFieldVisit)
-                  : null,
+                sessional1: toStorageValue(row.practicalS1),
+                sessional2: toStorageValue(row.practicalS2),
+                sessional3: toStorageValue(row.practicalS3),
+                assignmentMarks: toStorageValue(row.practicalAssignment),
+                fieldVisitMarks: toStorageValue(row.practicalFieldVisit),
               })
             );
           }
@@ -277,12 +273,8 @@ export default function BulkMarksPage() {
               upsertBoardMarks({
                 studentId: student.id,
                 subjectId: selectedSubject.id,
-                theoryMarks: row.theoryBoard
-                  ? parseFloat(row.theoryBoard)
-                  : null,
-                practicalMarks: row.practicalBoard
-                  ? parseFloat(row.practicalBoard)
-                  : null,
+                theoryMarks: toStorageValue(row.theoryBoard),
+                practicalMarks: toStorageValue(row.practicalBoard),
               })
             );
           }
@@ -516,10 +508,8 @@ export default function BulkMarksPage() {
                         {selectedSubject.isFixedMarks ? (
                           <TableCell className="text-center">
                             <Input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              max="50"
+                              type="text"
+                              placeholder="AB"
                               className="h-8 w-20 text-center text-sm mx-auto"
                               value={row.fixedMarks}
                               onChange={(e) =>
@@ -537,10 +527,9 @@ export default function BulkMarksPage() {
                               <>
                                 <TableCell className="text-center">
                                   <Input
-                                    type="number"
+                                    type="text"
                                     step="0.01"
-                                    min="0"
-                                    max="40"
+                                    placeholder="AB"
                                     className="h-8 w-20 text-center text-sm mx-auto"
                                     value={row.theoryS1}
                                     onChange={(e) =>
@@ -554,10 +543,9 @@ export default function BulkMarksPage() {
                                 </TableCell>
                                 <TableCell className="text-center">
                                   <Input
-                                    type="number"
+                                    type="text"
                                     step="0.01"
-                                    min="0"
-                                    max="40"
+                                    placeholder="AB"
                                     className="h-8 w-20 text-center text-sm mx-auto"
                                     value={row.theoryS2}
                                     onChange={(e) =>
@@ -571,10 +559,9 @@ export default function BulkMarksPage() {
                                 </TableCell>
                                 <TableCell className="text-center">
                                   <Input
-                                    type="number"
+                                    type="text"
                                     step="0.01"
-                                    min="0"
-                                    max="40"
+                                    placeholder="AB"
                                     className="h-8 w-20 text-center text-sm mx-auto"
                                     value={row.theoryS3}
                                     onChange={(e) =>
@@ -588,10 +575,9 @@ export default function BulkMarksPage() {
                                 </TableCell>
                                 <TableCell className="text-center">
                                   <Input
-                                    type="number"
+                                    type="text"
                                     step="0.01"
-                                    min="0"
-                                    max="80"
+                                    placeholder="AB"
                                     className="h-8 w-20 text-center text-sm mx-auto"
                                     value={row.theoryBoard}
                                     onChange={(e) =>
@@ -609,10 +595,9 @@ export default function BulkMarksPage() {
                               <>
                                 <TableCell className="text-center">
                                   <Input
-                                    type="number"
+                                    type="text"
                                     step="0.01"
-                                    min="0"
-                                    max="80"
+                                    placeholder="AB"
                                     className="h-8 w-20 text-center text-sm mx-auto"
                                     value={row.practicalS1}
                                     onChange={(e) =>
@@ -626,10 +611,9 @@ export default function BulkMarksPage() {
                                 </TableCell>
                                 <TableCell className="text-center">
                                   <Input
-                                    type="number"
+                                    type="text"
                                     step="0.01"
-                                    min="0"
-                                    max="80"
+                                    placeholder="AB"
                                     className="h-8 w-20 text-center text-sm mx-auto"
                                     value={row.practicalS2}
                                     onChange={(e) =>
@@ -643,10 +627,9 @@ export default function BulkMarksPage() {
                                 </TableCell>
                                 <TableCell className="text-center">
                                   <Input
-                                    type="number"
+                                    type="text"
                                     step="0.01"
-                                    min="0"
-                                    max="80"
+                                    placeholder="AB"
                                     className="h-8 w-20 text-center text-sm mx-auto"
                                     value={row.practicalS3}
                                     onChange={(e) =>
@@ -660,10 +643,9 @@ export default function BulkMarksPage() {
                                 </TableCell>
                                 <TableCell className="text-center">
                                   <Input
-                                    type="number"
+                                    type="text"
                                     step="0.01"
-                                    min="0"
-                                    max="5"
+                                    placeholder="AB"
                                     className="h-8 w-20 text-center text-sm mx-auto"
                                     value={row.practicalAssignment}
                                     onChange={(e) =>
@@ -677,10 +659,9 @@ export default function BulkMarksPage() {
                                 </TableCell>
                                 <TableCell className="text-center">
                                   <Input
-                                    type="number"
+                                    type="text"
                                     step="0.01"
-                                    min="0"
-                                    max="5"
+                                    placeholder="AB"
                                     className="h-8 w-20 text-center text-sm mx-auto"
                                     value={row.practicalFieldVisit}
                                     onChange={(e) =>
@@ -694,10 +675,9 @@ export default function BulkMarksPage() {
                                 </TableCell>
                                 <TableCell className="text-center">
                                   <Input
-                                    type="number"
+                                    type="text"
                                     step="0.01"
-                                    min="0"
-                                    max="80"
+                                    placeholder="AB"
                                     className="h-8 w-20 text-center text-sm mx-auto"
                                     value={row.practicalBoard}
                                     onChange={(e) =>

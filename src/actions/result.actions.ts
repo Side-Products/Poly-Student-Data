@@ -6,6 +6,7 @@ import {
   calculatePracticalSessional,
   calculateSubjectResult,
   calculateOverallResult,
+  parseMarkValue,
   type SubjectResult,
   type ResultSummary,
 } from "@/lib/result-calculator";
@@ -32,6 +33,7 @@ export async function calculateStudentResult(studentId: string): Promise<ResultS
   const subjectResults: SubjectResult[] = subjects.map((subject) => {
     if (subject.isFixedMarks) {
       const fixed = fixedMarks.find((f) => f.subjectId === subject.id);
+      const fixedMarksValue = parseMarkValue(fixed?.marks ?? null);
       return {
         subjectId: subject.id,
         subjectName: subject.name,
@@ -42,10 +44,10 @@ export async function calculateStudentResult(studentId: string): Promise<ResultS
         practicalSessional: null,
         practicalBoard: null,
         practicalTotal: null,
-        grandTotal: fixed?.marks ?? null,
+        grandTotal: fixedMarksValue,
         status: "PASS" as const,
         isFixedMarks: true,
-        fixedMarks: fixed?.marks ?? null,
+        fixedMarks: fixedMarksValue,
       };
     }
 
@@ -64,11 +66,14 @@ export async function calculateStudentResult(studentId: string): Promise<ResultS
       ? calculatePracticalSessional(practicalSessional)
       : null;
 
+    const theoryBoardValue = parseMarkValue(board?.theoryMarks ?? null);
+    const practicalBoardValue = parseMarkValue(board?.practicalMarks ?? null);
+
     const { theoryTotal, practicalTotal, grandTotal, status } = calculateSubjectResult(
       theorySessionalScore,
-      board?.theoryMarks ?? null,
+      theoryBoardValue,
       practicalSessionalScore,
-      board?.practicalMarks ?? null
+      practicalBoardValue
     );
 
     return {
@@ -76,10 +81,10 @@ export async function calculateStudentResult(studentId: string): Promise<ResultS
       subjectName: subject.name,
       paperCode: subject.paperCode,
       theorySessional: theorySessionalScore,
-      theoryBoard: board?.theoryMarks ?? null,
+      theoryBoard: theoryBoardValue,
       theoryTotal,
       practicalSessional: practicalSessionalScore,
-      practicalBoard: board?.practicalMarks ?? null,
+      practicalBoard: practicalBoardValue,
       practicalTotal,
       grandTotal,
       status,

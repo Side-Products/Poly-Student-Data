@@ -8,11 +8,11 @@ export async function upsertSessionalMarks(data: {
   studentId: string;
   subjectId: string;
   type: "THEORY" | "PRACTICAL";
-  sessional1?: number | null;
-  sessional2?: number | null;
-  sessional3?: number | null;
-  assignmentMarks?: number | null;
-  fieldVisitMarks?: number | null;
+  sessional1?: string | null;
+  sessional2?: string | null;
+  sessional3?: string | null;
+  assignmentMarks?: string | null;
+  fieldVisitMarks?: string | null;
 }) {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") throw new Error("Unauthorized");
@@ -42,8 +42,8 @@ export async function upsertSessionalMarks(data: {
 export async function upsertBoardMarks(data: {
   studentId: string;
   subjectId: string;
-  theoryMarks?: number | null;
-  practicalMarks?: number | null;
+  theoryMarks?: string | null;
+  practicalMarks?: string | null;
 }) {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") throw new Error("Unauthorized");
@@ -69,7 +69,7 @@ export async function upsertBoardMarks(data: {
 export async function upsertFixedMarks(data: {
   studentId: string;
   subjectId: string;
-  marks: number | null;
+  marks: string | null;
 }) {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") throw new Error("Unauthorized");

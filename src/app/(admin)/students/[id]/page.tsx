@@ -25,6 +25,7 @@ import {
   AREA_TYPES,
   YEAR_SEMESTERS,
   STATES,
+  BRANCHES,
 } from "@/lib/constants";
 
 export default function StudentDetailPage() {
@@ -301,7 +302,21 @@ export default function StudentDetailPage() {
                   </div>
                   <div className="space-y-2">
                     <Label>Branch Name</Label>
-                    <Input {...register("branchName")} />
+                    <Select
+                      value={watch("branchName") || ""}
+                      onValueChange={(value) => setValue("branchName", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select branch/course" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {BRANCHES.map((branch) => (
+                          <SelectItem key={branch.value} value={branch.value}>
+                            {branch.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label>High School Area Type</Label>

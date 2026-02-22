@@ -1,12 +1,12 @@
 export interface SessionalInput {
-  sessional1: number | null;
-  sessional2: number | null;
-  sessional3: number | null;
+  sessional1: string | null;
+  sessional2: string | null;
+  sessional3: string | null;
 }
 
 export interface PracticalSessionalInput extends SessionalInput {
-  assignmentMarks: number | null;
-  fieldVisitMarks: number | null;
+  assignmentMarks: string | null;
+  fieldVisitMarks: string | null;
 }
 
 export interface SubjectResult {
@@ -34,6 +34,14 @@ export interface ResultSummary {
   backPaperCount: number;
 }
 
+// Parse a mark string: "AB" → 0, empty/null → null, otherwise parseFloat
+export function parseMarkValue(val: string | null | undefined): number | null {
+  if (val === null || val === undefined || val.trim() === "") return null;
+  if (val.trim().toUpperCase() === "AB") return 0;
+  const num = parseFloat(val);
+  return isNaN(num) ? null : num;
+}
+
 // Best 2 of 3 sessionals, averaged
 function bestTwoAverage(marks: (number | null)[]): number | null {
   const valid = marks.filter((m): m is number => m !== null);
@@ -42,20 +50,25 @@ function bestTwoAverage(marks: (number | null)[]): number | null {
   return (valid[0] + valid[1]) / 2;
 }
 
-// Theory: 3 sessionals out of 40 each. Best 2 averaged, reduced to 20.
+// Theory: 3 sessionals out of 40 each. Best 2 averaged.
 export function calculateTheorySessional(input: SessionalInput): number | null {
-  const avg = bestTwoAverage([input.sessional1, input.sessional2, input.sessional3]);
-  if (avg === null) return null;
-  return avg / 2; // 40 -> 20
+  return bestTwoAverage([
+    parseMarkValue(input.sessional1),
+    parseMarkValue(input.sessional2),
+    parseMarkValue(input.sessional3),
+  ]);
 }
 
-// Practical: 3 sessionals out of 80 each. Best 2 averaged, reduced to 10.
-// Plus assignment (5) + field visit (5) = total 20
+// Practical: 3 sessionals out of 40 each. Best 2 averaged.
+// Plus assignment (5) + field visit (5)
 export function calculatePracticalSessional(input: PracticalSessionalInput): number | null {
-  const avg = bestTwoAverage([input.sessional1, input.sessional2, input.sessional3]);
+  const avg = bestTwoAverage([
+    parseMarkValue(input.sessional1),
+    parseMarkValue(input.sessional2),
+    parseMarkValue(input.sessional3),
+  ]);
   if (avg === null) return null;
-  const reduced = avg / 8; // 80 -> 10
-  return reduced + (input.assignmentMarks ?? 0) + (input.fieldVisitMarks ?? 0);
+  return avg + (parseMarkValue(input.assignmentMarks) ?? 0) + (parseMarkValue(input.fieldVisitMarks) ?? 0);
 }
 
 // Per-subject total = Sessional(20) + Board(80)

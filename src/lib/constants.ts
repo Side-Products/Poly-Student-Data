@@ -59,6 +59,12 @@ export const NATIONALITIES = [
   { value: "OTHER", label: "Other" },
 ] as const;
 
+export const BRANCHES = [
+  { value: "D_PHARM", label: "D.Pharm." },
+  { value: "CSCE", label: "CScE" },
+  { value: "MECHANICAL", label: "Mechanical" },
+] as const;
+
 export const YES_NO_OPTIONS = [
   { value: "true", label: "Yes" },
   { value: "false", label: "No" },

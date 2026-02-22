@@ -7,6 +7,7 @@ import {
   calculatePracticalSessional,
   calculateSubjectResult,
   calculateOverallResult,
+  parseMarkValue,
   type SubjectResult,
 } from "@/lib/result-calculator";
 
@@ -234,6 +235,7 @@ async function exportResultsData(year: string) {
         const fixed = student.fixedMarks.find(
           (f) => f.subjectId === subject.id
         );
+        const fixedMarksValue = parseMarkValue(fixed?.marks ?? null);
         return {
           subjectId: subject.id,
           subjectName: subject.name,
@@ -244,10 +246,10 @@ async function exportResultsData(year: string) {
           practicalSessional: null,
           practicalBoard: null,
           practicalTotal: null,
-          grandTotal: fixed?.marks ?? null,
+          grandTotal: fixedMarksValue,
           status: "PASS" as const,
           isFixedMarks: true,
-          fixedMarks: fixed?.marks ?? null,
+          fixedMarks: fixedMarksValue,
         };
       }
 
@@ -268,12 +270,15 @@ async function exportResultsData(year: string) {
         ? calculatePracticalSessional(practicalSessional)
         : null;
 
+      const theoryBoardValue = parseMarkValue(board?.theoryMarks ?? null);
+      const practicalBoardValue = parseMarkValue(board?.practicalMarks ?? null);
+
       const { theoryTotal, practicalTotal, grandTotal, status } =
         calculateSubjectResult(
           theorySessionalScore,
-          board?.theoryMarks ?? null,
+          theoryBoardValue,
           practicalSessionalScore,
-          board?.practicalMarks ?? null
+          practicalBoardValue
         );
 
       return {
@@ -281,10 +286,10 @@ async function exportResultsData(year: string) {
         subjectName: subject.name,
         paperCode: subject.paperCode,
         theorySessional: theorySessionalScore,
-        theoryBoard: board?.theoryMarks ?? null,
+        theoryBoard: theoryBoardValue,
         theoryTotal,
         practicalSessional: practicalSessionalScore,
-        practicalBoard: board?.practicalMarks ?? null,
+        practicalBoard: practicalBoardValue,
         practicalTotal,
         grandTotal,
         status,

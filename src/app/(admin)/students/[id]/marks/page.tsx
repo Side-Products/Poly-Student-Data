@@ -78,20 +78,20 @@ export default function StudentMarksPage() {
           const fixed = existingMarks.fixedMarks.find(
             (f) => f.subjectId === subj.id
           );
-          marksState[subj.id].fixed = fixed?.marks?.toString() ?? "";
+          marksState[subj.id].fixed = fixed?.marks ?? "";
         } else {
           if (subj.hasTheory) {
             const ts = existingMarks.sessionalMarks.find(
               (m) => m.subjectId === subj.id && m.type === "THEORY"
             );
             marksState[subj.id].theory = {
-              s1: ts?.sessional1?.toString() ?? "",
-              s2: ts?.sessional2?.toString() ?? "",
-              s3: ts?.sessional3?.toString() ?? "",
+              s1: ts?.sessional1 ?? "",
+              s2: ts?.sessional2 ?? "",
+              s3: ts?.sessional3 ?? "",
               board:
                 existingMarks.boardMarks
                   .find((b) => b.subjectId === subj.id)
-                  ?.theoryMarks?.toString() ?? "",
+                  ?.theoryMarks ?? "",
             };
           }
           if (subj.hasPractical) {
@@ -99,15 +99,15 @@ export default function StudentMarksPage() {
               (m) => m.subjectId === subj.id && m.type === "PRACTICAL"
             );
             marksState[subj.id].practical = {
-              s1: ps?.sessional1?.toString() ?? "",
-              s2: ps?.sessional2?.toString() ?? "",
-              s3: ps?.sessional3?.toString() ?? "",
-              assignment: ps?.assignmentMarks?.toString() ?? "",
-              fieldVisit: ps?.fieldVisitMarks?.toString() ?? "",
+              s1: ps?.sessional1 ?? "",
+              s2: ps?.sessional2 ?? "",
+              s3: ps?.sessional3 ?? "",
+              assignment: ps?.assignmentMarks ?? "",
+              fieldVisit: ps?.fieldVisitMarks ?? "",
               board:
                 existingMarks.boardMarks
                   .find((b) => b.subjectId === subj.id)
-                  ?.practicalMarks?.toString() ?? "",
+                  ?.practicalMarks ?? "",
             };
           }
         }
@@ -155,10 +155,24 @@ export default function StudentMarksPage() {
     });
   };
 
+  // Convert empty string to null for storage, keep everything else as-is
+  const toStorageValue = (val: string): string | null => {
+    if (!val || val.trim() === "") return null;
+    return val.trim();
+  };
+
+  // Parse mark value for display calculations: "AB" → 0, empty → null, otherwise parseFloat
+  const parseMarkForCalc = (val: string): number | null => {
+    if (!val || val.trim() === "") return null;
+    if (val.trim().toUpperCase() === "AB") return 0;
+    const num = parseFloat(val);
+    return isNaN(num) ? null : num;
+  };
+
   const calculateBestTwoAvg = (s1: string, s2: string, s3: string) => {
     const vals = [s1, s2, s3]
-      .map(parseFloat)
-      .filter((n) => !isNaN(n) && n > 0);
+      .map((v) => parseMarkForCalc(v))
+      .filter((n): n is number => n !== null);
     if (vals.length < 2) return 0;
     vals.sort((a, b) => b - a);
     return (vals[0] + vals[1]) / 2;
@@ -179,7 +193,7 @@ export default function StudentMarksPage() {
             upsertFixedMarks({
               studentId,
               subjectId: subj.id,
-              marks: m.fixed ? parseFloat(m.fixed) : null,
+              marks: toStorageValue(m.fixed ?? ""),
             })
           );
         } else {
@@ -189,9 +203,9 @@ export default function StudentMarksPage() {
                 studentId,
                 subjectId: subj.id,
                 type: "THEORY",
-                sessional1: m.theory.s1 ? parseFloat(m.theory.s1) : null,
-                sessional2: m.theory.s2 ? parseFloat(m.theory.s2) : null,
-                sessional3: m.theory.s3 ? parseFloat(m.theory.s3) : null,
+                sessional1: toStorageValue(m.theory.s1),
+                sessional2: toStorageValue(m.theory.s2),
+                sessional3: toStorageValue(m.theory.s3),
               })
             );
           }
@@ -202,21 +216,11 @@ export default function StudentMarksPage() {
                 studentId,
                 subjectId: subj.id,
                 type: "PRACTICAL",
-                sessional1: m.practical.s1
-                  ? parseFloat(m.practical.s1)
-                  : null,
-                sessional2: m.practical.s2
-                  ? parseFloat(m.practical.s2)
-                  : null,
-                sessional3: m.practical.s3
-                  ? parseFloat(m.practical.s3)
-                  : null,
-                assignmentMarks: m.practical.assignment
-                  ? parseFloat(m.practical.assignment)
-                  : null,
-                fieldVisitMarks: m.practical.fieldVisit
-                  ? parseFloat(m.practical.fieldVisit)
-                  : null,
+                sessional1: toStorageValue(m.practical.s1),
+                sessional2: toStorageValue(m.practical.s2),
+                sessional3: toStorageValue(m.practical.s3),
+                assignmentMarks: toStorageValue(m.practical.assignment),
+                fieldVisitMarks: toStorageValue(m.practical.fieldVisit),
               })
             );
           }
@@ -228,12 +232,8 @@ export default function StudentMarksPage() {
               upsertBoardMarks({
                 studentId,
                 subjectId: subj.id,
-                theoryMarks: board.theory?.board
-                  ? parseFloat(board.theory.board)
-                  : null,
-                practicalMarks: board.practical?.board
-                  ? parseFloat(board.practical.board)
-                  : null,
+                theoryMarks: toStorageValue(board.theory?.board ?? ""),
+                practicalMarks: toStorageValue(board.practical?.board ?? ""),
               })
             );
           }
@@ -320,10 +320,8 @@ export default function StudentMarksPage() {
                       <div key={field} className="space-y-2">
                         <Label>Sessional {idx + 1}</Label>
                         <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          max="40"
+                          type="text"
+                          placeholder="0-40 or AB"
                           value={marks[subject.id]?.theory?.[field] ?? ""}
                           onChange={(e) =>
                             updateMark(
@@ -337,16 +335,14 @@ export default function StudentMarksPage() {
                       </div>
                     ))}
                     <div className="space-y-2">
-                      <Label>Reduced to 20</Label>
+                      <Label>Best 2 Average</Label>
                       <Input
                         type="text"
                         disabled
-                        value={(
-                          calculateBestTwoAvg(
-                            marks[subject.id]?.theory?.s1 ?? "",
-                            marks[subject.id]?.theory?.s2 ?? "",
-                            marks[subject.id]?.theory?.s3 ?? ""
-                          ) / 2
+                        value={calculateBestTwoAvg(
+                          marks[subject.id]?.theory?.s1 ?? "",
+                          marks[subject.id]?.theory?.s2 ?? "",
+                          marks[subject.id]?.theory?.s3 ?? ""
                         ).toFixed(2)}
                         className="bg-gray-50"
                       />
@@ -356,10 +352,8 @@ export default function StudentMarksPage() {
                     <div className="space-y-2">
                       <Label>Board Marks (Out of 80)</Label>
                       <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max="80"
+                        type="text"
+                        placeholder="0-80 or AB"
                         value={marks[subject.id]?.theory?.board ?? ""}
                         onChange={(e) =>
                           updateMark(
@@ -379,17 +373,15 @@ export default function StudentMarksPage() {
               {subject.hasPractical && (
                 <div className="space-y-3">
                   <h4 className="font-medium text-gray-700">
-                    Practical Sessionals (Out of 80 each)
+                    Practical Sessionals (Out of 40 each)
                   </h4>
                   <div className="grid grid-cols-4 gap-4">
                     {(["s1", "s2", "s3"] as const).map((field, idx) => (
                       <div key={field} className="space-y-2">
                         <Label>Sessional {idx + 1}</Label>
                         <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          max="80"
+                          type="text"
+                          placeholder="0-40 or AB"
                           value={marks[subject.id]?.practical?.[field] ?? ""}
                           onChange={(e) =>
                             updateMark(
@@ -403,16 +395,14 @@ export default function StudentMarksPage() {
                       </div>
                     ))}
                     <div className="space-y-2">
-                      <Label>Reduced to 10</Label>
+                      <Label>Best 2 Average</Label>
                       <Input
                         type="text"
                         disabled
-                        value={(
-                          calculateBestTwoAvg(
-                            marks[subject.id]?.practical?.s1 ?? "",
-                            marks[subject.id]?.practical?.s2 ?? "",
-                            marks[subject.id]?.practical?.s3 ?? ""
-                          ) / 8
+                        value={calculateBestTwoAvg(
+                          marks[subject.id]?.practical?.s1 ?? "",
+                          marks[subject.id]?.practical?.s2 ?? "",
+                          marks[subject.id]?.practical?.s3 ?? ""
                         ).toFixed(2)}
                         className="bg-gray-50"
                       />
@@ -422,10 +412,8 @@ export default function StudentMarksPage() {
                     <div className="space-y-2">
                       <Label>Assignment (Out of 5)</Label>
                       <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max="5"
+                        type="text"
+                        placeholder="0-5 or AB"
                         value={marks[subject.id]?.practical?.assignment ?? ""}
                         onChange={(e) =>
                           updateMark(
@@ -440,10 +428,8 @@ export default function StudentMarksPage() {
                     <div className="space-y-2">
                       <Label>Field Visit (Out of 5)</Label>
                       <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max="5"
+                        type="text"
+                        placeholder="0-5 or AB"
                         value={marks[subject.id]?.practical?.fieldVisit ?? ""}
                         onChange={(e) =>
                           updateMark(
@@ -458,10 +444,8 @@ export default function StudentMarksPage() {
                     <div className="space-y-2">
                       <Label>Board Marks (Out of 80)</Label>
                       <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max="80"
+                        type="text"
+                        placeholder="0-80 or AB"
                         value={marks[subject.id]?.practical?.board ?? ""}
                         onChange={(e) =>
                           updateMark(
@@ -493,10 +477,8 @@ export default function StudentMarksPage() {
                       {subject.name} ({subject.paperCode})
                     </Label>
                     <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="50"
+                      type="text"
+                      placeholder="0-50 or AB"
                       value={marks[subject.id]?.fixed ?? ""}
                       onChange={(e) =>
                         updateMark(

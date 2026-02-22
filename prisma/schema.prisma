@@ -55,7 +55,22 @@ model Student {
   feeSubmitted       String? @map("fee_submitted")
   aadharNumber       String? @map("aadhar_number")
 
+  // ---- Year of Admission ----
+  yearOfAdmissionFirstYear  String? @map("year_of_admission_first_year")
+  yearOfAdmissionSecondYear String? @map("year_of_admission_second_year")
+
+  // ---- Additional Personal Info ----
+  motherName    String? @map("mother_name")
+  aadhaarNumber String? @map("aadhaar_number")
+  religion      String?
+
   // ---- Education Background ----
+  branch         String? // "D_PHARM" etc.
+  previousSchool String? @map("previous_school")
+  board          String? // Board/University
+  passingYear    String? @map("passing_year_edu")
+  percentage     String? // Percentage/CGPA
+
   highSchoolPass       Boolean? @map("high_school_pass")
   intermediatePass     Boolean? @map("intermediate_pass")
   highSchoolAreaType   String?  @map("high_school_area_type") // "RURAL" | "URBAN"
@@ -64,9 +79,15 @@ model Student {
   interQualifiedPCBPCM Boolean? @map("inter_qualified_pcb_pcm")
 
   // ---- Admission Type ----
-  admissionType  String? @map("admission_type") // "JEEP" | "NON_JEEP"
-  jeepRollNumber String? @map("jeep_roll_number")
-  jeepRank       String? @map("jeep_rank")
+  admissionType     String? @map("admission_type") // "JEEP" | "NON_JEEP"
+  admissionDate     String? @map("admission_date")
+  session           String? // e.g., "2024-25"
+  hostelRequired    String? @map("hostel_required")
+  transportRequired String? @map("transport_required")
+  jeepRollNumber    String? @map("jeep_roll_number")
+  jeepRank          String? @map("jeep_rank")
+  twelfthBoard      String? @map("twelfth_board")
+  twelfthPercentage String? @map("twelfth_percentage")
 
   // ---- Student Type ----
   studentType          String? @default("REGULAR") @map("student_type") // "REGULAR" | "PRIVATE" | "TRANSFERRED" | "STUDY_PERMISSION"
@@ -74,6 +95,35 @@ model Student {
   transferToCollege    String? @map("transfer_to_college")
   studyPermFromCollege String? @map("study_perm_from_college")
   studyPermToCollege   String? @map("study_perm_to_college")
+
+  // ---- Address (flat fields for form) ----
+  permanentAddress       String? @map("permanent_address")
+  permanentVillage       String? @map("permanent_village")
+  permanentBlock         String? @map("permanent_block")
+  permanentTehsil        String? @map("permanent_tehsil")
+  permanentPostOffice    String? @map("permanent_post_office")
+  permanentPoliceStation String? @map("permanent_police_station")
+  permanentDistrict      String? @map("permanent_district")
+  permanentState         String? @map("permanent_state")
+  permanentPinCode       String? @map("permanent_pin_code")
+
+  correspondenceAddress       String? @map("correspondence_address")
+  correspondenceVillage       String? @map("correspondence_village")
+  correspondenceBlock         String? @map("correspondence_block")
+  correspondenceTehsil        String? @map("correspondence_tehsil")
+  correspondencePostOffice    String? @map("correspondence_post_office")
+  correspondencePoliceStation String? @map("correspondence_police_station")
+  correspondenceDistrict      String? @map("correspondence_district")
+  correspondenceState         String? @map("correspondence_state")
+  correspondencePinCode       String? @map("correspondence_pin_code")
+
+  // ---- Parent Details ----
+  fatherQualification String? @map("father_qualification")
+  fatherOccupation    String? @map("father_occupation")
+  fatherIncome        String? @map("father_income")
+  motherQualification String? @map("mother_qualification")
+  motherOccupation    String? @map("mother_occupation")
+  motherIncome        String? @map("mother_income")
 
   // ---- Status ----
   isSubmitted         Boolean   @default(false) @map("is_submitted")
@@ -167,13 +217,13 @@ model SessionalMark {
   subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   type      String // "THEORY" | "PRACTICAL"
 
-  sessional1 Float? @map("sessional_1")
-  sessional2 Float? @map("sessional_2")
-  sessional3 Float? @map("sessional_3")
+  sessional1 String? @map("sessional_1")
+  sessional2 String? @map("sessional_2")
+  sessional3 String? @map("sessional_3")
 
   // Practical-specific additional marks
-  assignmentMarks Float? @map("assignment_marks") // Out of 5
-  fieldVisitMarks Float? @map("field_visit_marks") // Out of 5
+  assignmentMarks String? @map("assignment_marks") // Out of 5
+  fieldVisitMarks String? @map("field_visit_marks") // Out of 5
 
   @@unique([studentId, subjectId, type])
   @@map("sessional_marks")
@@ -189,8 +239,8 @@ model BoardMark {
   student        Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   subjectId      String @map("subject_id")
   subject        Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  theoryMarks    Float? @map("theory_marks")    // Out of 80
-  practicalMarks Float? @map("practical_marks") // Out of 80
+  theoryMarks    String? @map("theory_marks")    // Out of 80
+  practicalMarks String? @map("practical_marks") // Out of 80
 
   @@unique([studentId, subjectId])
   @@map("board_marks")
@@ -206,7 +256,7 @@ model FixedMark {
   student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   subjectId String @map("subject_id")
   subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  marks     Float? // Admin assigns directly
+  marks     String? // Admin assigns directly
 
   @@unique([studentId, subjectId])
   @@map("fixed_marks")

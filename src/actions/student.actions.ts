@@ -47,10 +47,39 @@ export async function updateStudentApplication(
   }
 
   await prisma.$transaction(async (tx) => {
+    // Only pick fields that exist in the Student model
+    const allowedFields = [
+      "registrationNumber", "rollNumber", "groupShift", "name", "fatherName",
+      "yearSemester", "instituteName", "branchName", "email", "nationality",
+      "dateOfBirth", "gender", "category", "subCategory", "mobileNumber",
+      "landlineNumber", "feeSubmitted", "aadharNumber",
+      "yearOfAdmissionFirstYear", "yearOfAdmissionSecondYear",
+      "highSchoolPass", "intermediatePass", "highSchoolAreaType", "itiPass",
+      "minority", "interQualifiedPCBPCM",
+      "admissionType", "jeepRollNumber", "jeepRank", "twelfthBoard", "twelfthPercentage",
+      "studentType", "transferFromCollege", "transferToCollege",
+      "studyPermFromCollege", "studyPermToCollege",
+      "motherName", "aadhaarNumber", "religion",
+      "branch", "previousSchool", "board", "passingYear", "percentage",
+      "admissionDate", "session", "hostelRequired", "transportRequired",
+      "permanentAddress", "permanentVillage", "permanentBlock", "permanentTehsil", "permanentPostOffice",
+      "permanentPoliceStation", "permanentDistrict", "permanentState", "permanentPinCode",
+      "correspondenceAddress", "correspondenceVillage", "correspondenceBlock", "correspondenceTehsil", "correspondencePostOffice",
+      "correspondencePoliceStation", "correspondenceDistrict", "correspondenceState", "correspondencePinCode",
+      "fatherQualification", "fatherOccupation", "fatherIncome",
+      "motherQualification", "motherOccupation", "motherIncome",
+    ] as const;
+    const studentData: Record<string, unknown> = {};
+    for (const field of allowedFields) {
+      if (field in data) {
+        studentData[field] = data[field];
+      }
+    }
+
     // Update student basic data
     await tx.student.update({
       where: { id: studentId },
-      data: data as Parameters<typeof tx.student.update>[0]["data"],
+      data: studentData as Parameters<typeof tx.student.update>[0]["data"],
     });
 
     // Update addresses
